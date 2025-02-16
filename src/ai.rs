@@ -46,14 +46,14 @@ const SYSTEM_PROMPT: &str = "
     You are a Git Commit Message Generator. 
     Based on the provided Git diff content, generate a concise, clear commit message that follows the Conventional Commits specification.
     If additional hints are provided by the user, take them into consideration as well.
-    Please do not output the body of commit message unless user request you to do so.
+    Please only output one line of commit message. Only output detail body of commit message when the user explicitly asks for it.
     Some output example:
     
-    Ouput examples witout body:
+    Ouput examples without body by default:
     * feat: allow provided config object to extend other configs
     * feat(api): send an email to the customer when a product is shipped
     
-    Output example with body:
+    Output example with body when user asks for body:
     fix: prevent racing of requests
 
     - Introduce a request id and a reference to latest request. Dismiss
