@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use std::io::Write;
 mod git;
 mod ai;
 mod config;
@@ -39,11 +40,22 @@ async fn main() -> Result<()> {
     // 调用 AI 服务生成 commit message
     let ai_service = ai::AiService::new(config.api_endpoint, config.model, config.api_key);
     let commit_message = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
-    println!("Commit message:\n{}", commit_message);
+    println!("Commit message:\n\n{}\n", commit_message);
     
     if cli.commit {
         git_diff.commit(&commit_message)?;
         println!("Successfully committed changes.");
+    } else {
+        print!("Do you want to commit these changes? [y/N] ");
+        std::io::stdout().flush()?;
+        
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input)?;
+        
+        if input.trim().to_lowercase() == "y" {
+            git_diff.commit(&commit_message)?;
+            println!("Successfully committed changes.");
+        }
     }
     
     Ok(())
