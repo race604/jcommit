@@ -32,6 +32,10 @@ async fn main() -> Result<()> {
     // 读取 Git 仓库的 diff 信息
     let git_diff = git::GitDiff::new(&cli.path)?;
     let diff_content = git_diff.get_staged_diff()?;
+    if diff_content.trim().is_empty() {
+        println!("错误：没有找到已暂存的修改。请使用 'git add' 命令将修改添加到暂存区。");
+        return Ok(());
+    }
     println!("Git diff content: {}\n", diff_content);
     
     // 读取配置
