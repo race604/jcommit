@@ -18,6 +18,10 @@ struct Cli {
     /// 是否输出 commit message 的 body 部分
     #[arg(short, long)]
     body: bool,
+
+    /// 是否直接执行 git commit 命令
+    #[arg(short = 'c', long)]
+    commit: bool,
 }
 
 #[tokio::main]
@@ -36,6 +40,11 @@ async fn main() -> Result<()> {
     let ai_service = ai::AiService::new(config.api_endpoint, config.model, config.api_key);
     let commit_message = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
     println!("Commit message:\n{}", commit_message);
+    
+    if cli.commit {
+        git_diff.commit(&commit_message)?;
+        println!("Successfully committed changes.");
+    }
     
     Ok(())
 }

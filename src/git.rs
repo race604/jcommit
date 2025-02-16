@@ -6,6 +6,26 @@ pub struct GitDiff {
 }
 
 impl GitDiff {
+    pub fn commit(&self, message: &str) -> Result<()> {
+        let signature = self.repo.signature()?;
+        let tree_id = self.repo.index()?.write_tree()?;
+        let tree = self.repo.find_tree(tree_id)?;
+        
+        let parent_commit = self.repo.head()?.peel_to_commit()?;
+        
+        self.repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &[&parent_commit]
+        )?;
+        
+        Ok(())
+    }
+
+
     pub fn new(path: &str) -> Result<Self> {
         let repo = Repository::open(path)?;
         Ok(Self { repo })
