@@ -13,6 +13,10 @@ struct Cli {
     /// 指定 Git 仓库路径，默认为当前目录
     #[arg(short, long, default_value = ".")]
     path: String,
+
+    /// 是否输出 commit message 的 body 部分
+    #[arg(short, long)]
+    body: bool,
 }
 
 #[tokio::main]
@@ -26,8 +30,8 @@ async fn main() -> Result<()> {
     
     // 调用 AI 服务生成 commit message
     let ai_service = ai::AiService::new(Some("https://ark.cn-beijing.volces.com/api/v3".to_string()), Some("ep-20250216102315-h4q9m".to_string()));
-    let commit_message = ai_service.generate_commit_message(diff_content, cli.message).await?;
-    println!("生成的 commit message:\n{}", commit_message);
+    let commit_message = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
+    println!("Commit message:\n{}", commit_message);
     
     Ok(())
 }

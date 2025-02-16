@@ -42,7 +42,25 @@ pub struct AiService {
     model: String,
 }
 
-const SYSTEM_PROMPT: &str = "You are a Git Commit Message Generator. Based on the provided Git diff content, generate a concise, clear commit message that follows the Conventional Commits specification. If additional hints are provided by the user, take them into consideration as well.";
+const SYSTEM_PROMPT: &str = "
+    You are a Git Commit Message Generator. 
+    Based on the provided Git diff content, generate a concise, clear commit message that follows the Conventional Commits specification.
+    If additional hints are provided by the user, take them into consideration as well.
+    Please do not output commit message body unless user request it specificly.
+    Some output example:
+    
+    Ouput examples witout body:
+    * feat: allow provided config object to extend other configs
+    * feat(api): send an email to the customer when a product is shipped
+    
+    Output example with body:
+    fix: prevent racing of requests
+
+    - Introduce a request id and a reference to latest request. Dismiss
+    incoming responses other than from latest request.
+
+    - Remove timeouts which were used to mitigate the racing issue but are
+    obsolete now.";
 
 const DEFAULT_API_ENDPOINT: &str = "https://api.openai.com/v1";
 
@@ -86,6 +104,7 @@ impl AiService {
         &self,
         diff: String,
         message: Option<String>,
+        body: bool,
     ) -> Result<String> {
         let mut messages = vec![
             ChatMessage {
@@ -102,6 +121,13 @@ impl AiService {
             messages.push(ChatMessage {
                 role: "user".to_string(),
                 content: format!("User input hints: {}\n", msg),
+            });
+        }
+
+        if body {
+            messages.push(ChatMessage {
+                role: "user".to_string(),
+                content: "Please include a detailed description in the commit message body.".to_string(),
             });
         }
 
