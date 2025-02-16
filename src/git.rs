@@ -1,5 +1,5 @@
 use anyhow::Result;
-use git2::{Repository, DiffOptions};
+use git2::{Repository, DiffOptions, Oid, BranchType};
 
 pub struct GitDiff {
     repo: Repository,
@@ -35,12 +35,14 @@ impl GitDiff {
         let mut diff_opts = DiffOptions::new();
         let head_tree = self.repo.head()?.peel_to_tree()?;
         let diff = self.repo.diff_tree_to_index(Some(&head_tree), None, Some(&mut diff_opts))?;
-        
+        self.format_diff(&diff)
+    }
+
+    fn format_diff(&self, diff: &git2::Diff) -> Result<String> {
         let mut diff_content = String::new();
         diff.print(git2::DiffFormat::Patch, |_delta, _hunk, line| {
             use std::str;
             if let Ok(content) = str::from_utf8(line.content()) {
-                // 根据行的类型添加对应的前缀
                 let prefix = match line.origin() {
                     '+' => "+",
                     '-' => "-",
@@ -51,7 +53,32 @@ impl GitDiff {
             }
             true
         })?;
-
         Ok(diff_content)
+    }
+
+    pub fn get_summary_diff(&self, base: &str) -> Result<String> {
+        let mut diff_opts = DiffOptions::new();
+        
+        let base_commit = if self.repo.revparse(base)?.mode().contains(git2::RevparseMode::SINGLE) {
+            // Base is a commit or tag
+            self.repo.revparse_single(base)?.peel_to_commit()?
+        } else {
+            // Try to find branch
+            let base_branch = self.repo.find_branch(base, BranchType::Local)
+                .or_else(|_| self.repo.find_branch(base, BranchType::Remote))?;
+            base_branch.get().peel_to_commit()?
+        };
+
+        let head_commit = self.repo.head()?.peel_to_commit()?;
+        let base_tree = base_commit.tree()?;
+        let head_tree = head_commit.tree()?;
+
+        let diff = self.repo.diff_tree_to_tree(
+            Some(&base_tree),
+            Some(&head_tree),
+            Some(&mut diff_opts)
+        )?;
+
+        self.format_diff(&diff)
     }
 }

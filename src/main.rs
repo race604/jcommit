@@ -23,6 +23,10 @@ struct Cli {
     /// Whether to execute git commit command directly
     #[arg(short = 'c', long)]
     commit: bool,
+
+    /// Generate a summary of changes between current HEAD and specified base commit/branch
+    #[arg(short = 's', long)]
+    summary: Option<String>,
 }
 
 #[tokio::main]
@@ -31,11 +35,17 @@ async fn main() -> Result<()> {
     
     // Read Git repository diff information
     let git_diff = git::GitDiff::new(&cli.path)?;
-    let diff_content = git_diff.get_staged_diff()?;
-    if diff_content.trim().is_empty() {
-        println!("Error: No staged changes found. Please use 'git add' command to stage your changes.");
-        return Ok(());
-    }
+    
+    let diff_content = if let Some(base) = cli.summary {
+        git_diff.get_summary_diff(&base)?
+    } else {
+        let diff = git_diff.get_staged_diff()?;
+        if diff.trim().is_empty() {
+            println!("Error: No staged changes found. Please use 'git add' command to stage your changes.");
+            return Ok(());
+        }
+        diff
+    };
     // println!("Git diff content: {}\n", diff_content);
     
     // Read configuration
