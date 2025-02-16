@@ -11,10 +11,10 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self> {
-        // 首先尝试从配置文件读取
+        // read cofig file
         let config = Self::from_file().unwrap_or_default();
         
-        // 然后用环境变量覆盖配置文件的值
+        // read env vars to override config
         let config = Self {
             api_endpoint: std::env::var("JCOMMIT_API_ENDPOINT").ok().or(config.api_endpoint),
             model: std::env::var("JCOMMIT_MODEL").ok().or(config.model),
