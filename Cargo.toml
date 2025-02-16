@@ -2,8 +2,13 @@
 name = "jcommit"
 version = "0.1.0"
 edition = "2021"
-authors = ["Jing"]
+authors = ["Race604"]
 description = "An AI-powered tool to generate git commit messages"
+license = "MIT"
+repository = "https://github.com/jing/jcommit"
+readme = "README.md"
+keywords = ["git", "commit", "ai", "openai", "gpt"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 git2 = "0.18.1"
