@@ -1,0 +1,14 @@
+# Example configuration file for jcommit
+# Copy this file to ~/.jcommit.toml and modify as needed
+
+# OpenAI API endpoint
+# Optional configuration, defaults to "https://api.openai.com/v1"
+# api_endpoint = "https://api.openai.com/v1"
+
+# OpenAI model name
+# Optional configuration, defaults to "gpt-3.5-turbo"
+# model = "gpt-3.5-turbo"
+
+# OpenAI API key
+# Required configuration, can be set here or via the OPENAI_API_KEY environment variable
+# api_key = "your-api-key-here"

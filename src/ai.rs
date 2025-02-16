@@ -74,11 +74,11 @@ fn ensure_chat_completions_endpoint(endpoint: &str) -> String {
 const DEFAULT_MODEL: &str = "gpt-3.5-turbo";
 
 impl AiService {
-    pub fn new(api_endpoint: Option<String>, model: Option<String>) -> Self {
+    pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         
-        if let Ok(api_key) = std::env::var("OPENAI_API_KEY") {
+        if let Some(api_key) = api_key {
             headers.insert(
                 AUTHORIZATION,
                 HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
