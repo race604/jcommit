@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 mod git;
+mod ai;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -23,8 +24,10 @@ async fn main() -> Result<()> {
     let diff_content = git_diff.get_staged_diff()?;
     println!("Git diff content: {}\n", diff_content);
     
-    // TODO: 实现 AI 服务调用
-    // TODO: 实现 commit message 生成
+    // 调用 AI 服务生成 commit message
+    let ai_service = ai::AiService::new(Some("https://ark.cn-beijing.volces.com/api/v3".to_string()), Some("ep-20250216102315-h4q9m".to_string()));
+    let commit_message = ai_service.generate_commit_message(diff_content, cli.message).await?;
+    println!("生成的 commit message:\n{}", commit_message);
     
     Ok(())
 }
