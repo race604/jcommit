@@ -9,6 +9,7 @@ An AI-powered tool to generate git commit messages using OpenAI's GPT models.
 - Optional commit message body generation
 - Direct commit option available
 - Configurable OpenAI API endpoint and model
+- Generate commit message based on changes between branches/commits
 
 ## Installation
 
@@ -53,6 +54,11 @@ jcommit -c
 
 # Specify repository path
 jcommit -p /path/to/repo
+
+# Generate commit message based on changes between branches or commits
+jcommit -s main     # Compare with main branch
+jcommit -s HEAD~1   # Compare with previous commit
+jcommit -s v1.0.0   # Compare with a tag
 ```
 
 ## License
