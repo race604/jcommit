@@ -1,6 +1,6 @@
 [package]
 name = "jcommit"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Race604"]
 description = "An AI-powered tool to generate git commit messages"
