@@ -27,7 +27,7 @@ impl GitDiff {
 
 
     pub fn new(path: &str) -> Result<Self> {
-        let repo = Repository::open(path)?;
+        let repo = Repository::discover(path)?;
         Ok(Self { repo })
     }
 
