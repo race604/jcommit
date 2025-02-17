@@ -27,15 +27,27 @@ Before using jcommit, you need to set up your OpenAI API key. You can do this by
 Example configuration file:
 
 ```toml
-# OpenAI API key
+# OpenAI API key (or Azure OpenAI API key)
 api_key = "your-api-key-here"
 
-# Optional: Custom API endpoint
+# Optional: Custom API endpoint (for Azure OpenAI, use your deployment endpoint)
 # api_endpoint = "https://api.openai.com/v1"
 
 # Optional: Custom model name
 # model = "gpt-3.5-turbo"
+
+# Optional: Enable Azure OpenAI API
+# is_azure = false
+
+# Optional: Azure OpenAI API version
+# api_version = "2023-05-15"
 ```
+
+For Azure OpenAI Service users:
+1. Set `is_azure = true` in the configuration
+2. Use your Azure OpenAI deployment endpoint as `api_endpoint`
+3. Use your Azure OpenAI API key as `api_key`
+4. Optionally specify the API version using `api_version`
 
 ## Usage
 

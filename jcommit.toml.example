@@ -3,6 +3,7 @@
 
 # OpenAI API endpoint
 # Optional configuration, defaults to "https://api.openai.com/v1"
+# For Azure OpenAI, use your Azure OpenAI endpoint
 # api_endpoint = "https://api.openai.com/v1"
 
 # OpenAI model name
@@ -11,4 +12,13 @@
 
 # OpenAI API key
 # Required configuration, can be set here or via the OPENAI_API_KEY environment variable
+# For Azure OpenAI, use your Azure API key
 # api_key = "your-api-key-here"
+
+# Whether to use Azure OpenAI API
+# Optional configuration, defaults to false
+# is_azure = false
+
+# Azure OpenAI API version
+# Optional configuration for Azure OpenAI, defaults to "2023-05-15"
+# api_version = "2023-05-15"
