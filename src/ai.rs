@@ -66,15 +66,18 @@ const DEFAULT_API_ENDPOINT: &str = "https://api.openai.com/v1";
 const DEFAULT_AZURE_API_VERSION: &str = "2023-05-15";
 const DEFAULT_MODEL: &str = "gpt-3.5-turbo";
 
-fn ensure_chat_completions_endpoint(endpoint: &str) -> String {
-    if !endpoint.ends_with("/chat/completions") {
-        format!("{}/chat/completions", endpoint.trim_end_matches('/'))
-    } else {
-        endpoint.to_string()
-    }
-}
-
 impl AiService {
+    fn build_api_endpoint(base_endpoint: &str, is_azure: bool, model: &str, api_version: Option<String>) -> String {
+        let base_endpoint = base_endpoint.trim_end_matches('/');
+        
+        if is_azure {
+            let version = api_version.unwrap_or_else(|| DEFAULT_AZURE_API_VERSION.to_string());
+            format!("{}/openai/deployments/{}/chat/completions?api-version={}", base_endpoint, model, version)
+        } else {
+            format!("{}/chat/completions", base_endpoint)
+        }
+    }
+
     pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>, is_azure: bool, api_version: Option<String>) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -91,17 +94,14 @@ impl AiService {
             .build()
             .unwrap();
 
-        let api_endpoint = api_endpoint.unwrap_or_else(|| DEFAULT_API_ENDPOINT.to_string());
-        let mut api_endpoint = ensure_chat_completions_endpoint(&api_endpoint);
-        if is_azure {
-            let version = api_version.unwrap_or_else(|| DEFAULT_AZURE_API_VERSION.to_string());
-            api_endpoint = format!("{}?api-version={}", api_endpoint.trim_end_matches('/'), version);
-        }
+        let base_endpoint = api_endpoint.unwrap_or_else(|| DEFAULT_API_ENDPOINT.to_string());
+        let model = model.unwrap_or_else(|| DEFAULT_MODEL.to_string());
+        let api_endpoint = Self::build_api_endpoint(&base_endpoint, is_azure, &model, api_version);
 
         Self {
             client,
             api_endpoint,
-            model: model.unwrap_or_else(|| DEFAULT_MODEL.to_string())
+            model
         }
     }
 
