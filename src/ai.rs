@@ -39,7 +39,7 @@ struct Choice {
 pub struct AiService {
     client: reqwest::Client,
     api_endpoint: String,
-    model: String,
+    model: String
 }
 
 const SYSTEM_PROMPT: &str = "
@@ -63,6 +63,8 @@ const SYSTEM_PROMPT: &str = "
     obsolete now.";
 
 const DEFAULT_API_ENDPOINT: &str = "https://api.openai.com/v1";
+const DEFAULT_AZURE_API_VERSION: &str = "2023-05-15";
+const DEFAULT_MODEL: &str = "gpt-3.5-turbo";
 
 fn ensure_chat_completions_endpoint(endpoint: &str) -> String {
     if !endpoint.ends_with("/chat/completions") {
@@ -71,10 +73,9 @@ fn ensure_chat_completions_endpoint(endpoint: &str) -> String {
         endpoint.to_string()
     }
 }
-const DEFAULT_MODEL: &str = "gpt-3.5-turbo";
 
 impl AiService {
-    pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>) -> Self {
+    pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>, is_azure: bool, api_version: Option<String>) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         
@@ -91,12 +92,16 @@ impl AiService {
             .unwrap();
 
         let api_endpoint = api_endpoint.unwrap_or_else(|| DEFAULT_API_ENDPOINT.to_string());
-        let api_endpoint = ensure_chat_completions_endpoint(&api_endpoint);
+        let mut api_endpoint = ensure_chat_completions_endpoint(&api_endpoint);
+        if is_azure {
+            let version = api_version.unwrap_or_else(|| DEFAULT_AZURE_API_VERSION.to_string());
+            api_endpoint = format!("{}?api-version={}", api_endpoint.trim_end_matches('/'), version);
+        }
 
         Self {
             client,
             api_endpoint,
-            model: model.unwrap_or_else(|| DEFAULT_MODEL.to_string()),
+            model: model.unwrap_or_else(|| DEFAULT_MODEL.to_string())
         }
     }
 

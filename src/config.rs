@@ -7,6 +7,8 @@ pub struct Config {
     pub api_endpoint: Option<String>,
     pub model: Option<String>,
     pub api_key: Option<String>,
+    pub is_azure: Option<bool>,
+    pub api_version: Option<String>,
 }
 
 impl Config {
@@ -19,6 +21,11 @@ impl Config {
             api_endpoint: std::env::var("JCOMMIT_API_ENDPOINT").ok().or(config.api_endpoint),
             model: std::env::var("JCOMMIT_MODEL").ok().or(config.model),
             api_key: std::env::var("OPENAI_API_KEY").ok().or(config.api_key),
+            is_azure: std::env::var("JCOMMIT_IS_AZURE")
+                .ok()
+                .and_then(|v| v.parse::<bool>().ok())
+                .or(config.is_azure),
+            api_version: std::env::var("JCOMMIT_API_VERSION").ok().or(config.api_version),
         };
 
         Ok(config)
@@ -47,6 +54,8 @@ impl Default for Config {
             api_endpoint: None,
             model: None,
             api_key: None,
+            is_azure: None,
+            api_version: None,
         }
     }
 }

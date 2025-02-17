@@ -52,10 +52,16 @@ async fn main() -> Result<()> {
     let config = config::Config::new()?;
     
     // Call AI service to generate commit message
-    let ai_service = ai::AiService::new(config.api_endpoint, config.model, config.api_key);
+    let ai_service = ai::AiService::new(
+        config.api_endpoint,
+        config.model,
+        config.api_key,
+        config.is_azure.unwrap_or(false),
+        config.api_version
+    );
     let commit_message = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
     println!("Commit message:\n\n{}\n", commit_message);
-    
+
     if cli.commit {
         git_diff.commit(&commit_message)?;
         println!("Successfully committed changes.");
