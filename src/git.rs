@@ -1,5 +1,5 @@
 use anyhow::Result;
-use git2::{Repository, DiffOptions, Oid, BranchType};
+use git2::{Repository, DiffOptions, BranchType};
 
 pub struct GitDiff {
     repo: Repository,

@@ -1,6 +1,8 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use futures_util::StreamExt;
+use std::io::Write;
 
 #[derive(Serialize)]
 struct AiRequest {
@@ -110,7 +112,7 @@ impl AiService {
         diff: String,
         message: Option<String>,
         body: bool,
-    ) -> Result<String> {
+    ) -> Result<impl futures_util::Stream<Item = Result<String>>> {
         let mut messages = vec![
             ChatMessage {
                 role: "system".to_string(),
@@ -136,11 +138,12 @@ impl AiService {
             });
         }
 
-        let request = ChatCompletionRequest {
-            model: self.model.clone(),
-            messages,
-            temperature: 0.7,
-        };
+        let request = serde_json::json!({
+            "model": self.model.clone(),
+            "messages": messages,
+            "temperature": 0.7,
+            "stream": true
+        });
 
         let response = self
             .client
@@ -155,13 +158,27 @@ impl AiService {
             anyhow::bail!("API request failed: HTTP {} - {}", status, error_text);
         }
 
-        let parsed_response: ChatCompletionResponse = response.json().await
-            .map_err(|e| anyhow::anyhow!("Parse API reponse failed: {}", e))?;
-
-        if let Some(choice) = parsed_response.choices.first() {
-            Ok(choice.message.content.clone())
-        } else {
-            anyhow::bail!("No response from OpenAI API")
-        }
+        let stream = response.bytes_stream();
+        Ok(stream.map(|chunk| -> Result<String> {
+            let chunk = chunk?;
+            let text = String::from_utf8(chunk.to_vec())?;
+            let mut result = String::new();
+            
+            for line in text.lines() {
+                if line.starts_with("data: ") {
+                    let data = line.trim_start_matches("data: ").trim();
+                    if data == "[DONE]" {
+                        continue;
+                    }
+                    if let Ok(response) = serde_json::from_str::<serde_json::Value>(data) {
+                        if let Some(content) = response["choices"][0]["delta"]["content"].as_str() {
+                            result.push_str(content);
+                        }
+                    }
+                }
+            }
+            
+            Ok(result)
+        }))
     }
 }

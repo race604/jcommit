@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use std::io::Write;
+use futures_util::StreamExt;
 mod git;
 mod ai;
 mod config;
@@ -59,8 +60,18 @@ async fn main() -> Result<()> {
         config.is_azure.unwrap_or(false),
         config.api_version
     );
-    let commit_message = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
-    println!("Commit message:\n\n{}\n", commit_message);
+    let mut commit_message = String::new();
+    let mut stream = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
+    println!("Commit message:\n");
+    while let Some(content) = stream.next().await {
+        let content = content?;
+        if !content.is_empty() {
+            print!("{}", content);
+            std::io::stdout().flush()?;
+            commit_message.push_str(&content);
+        }
+    }
+    println!("\n");
 
     if cli.commit {
         git_diff.commit(&commit_message)?;
