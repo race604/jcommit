@@ -1,84 +1,78 @@
-use anyhow::Result;
-use git2::{Repository, DiffOptions, BranchType};
+use anyhow::{Result, anyhow};
+use std::process::Command;
 
 pub struct GitDiff {
-    repo: Repository,
+    repo_path: String,
 }
 
 impl GitDiff {
     pub fn commit(&self, message: &str) -> Result<()> {
-        let signature = self.repo.signature()?;
-        let tree_id = self.repo.index()?.write_tree()?;
-        let tree = self.repo.find_tree(tree_id)?;
-        
-        let parent_commit = self.repo.head()?.peel_to_commit()?;
-        
-        self.repo.commit(
-            Some("HEAD"),
-            &signature,
-            &signature,
-            message,
-            &tree,
-            &[&parent_commit]
-        )?;
-        
+        let output = Command::new("git")
+            .current_dir(&self.repo_path)
+            .arg("commit")
+            .arg("-m")
+            .arg(message)
+            .output()?;
+
+        if !output.status.success() {
+            return Err(anyhow!(
+                "Git commit failed: {}", 
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
         Ok(())
     }
 
-
     pub fn new(path: &str) -> Result<Self> {
-        let repo = Repository::discover(path)?;
-        Ok(Self { repo })
+        // 验证目录是否是一个有效的 git 仓库
+        let output = Command::new("git")
+            .current_dir(path)
+            .arg("rev-parse")
+            .arg("--git-dir")
+            .output()?;
+
+        if !output.status.success() {
+            return Err(anyhow!("Not a git repository"));
+        }
+
+        Ok(Self { 
+            repo_path: path.to_string() 
+        })
     }
 
     pub fn get_staged_diff(&self) -> Result<String> {
-        let mut diff_opts = DiffOptions::new();
-        let head_tree = self.repo.head()?.peel_to_tree()?;
-        let diff = self.repo.diff_tree_to_index(Some(&head_tree), None, Some(&mut diff_opts))?;
-        self.format_diff(&diff)
-    }
+        let output = Command::new("git")
+            .current_dir(&self.repo_path)
+            .arg("diff")
+            .arg("--cached")
+            .output()?;
 
-    fn format_diff(&self, diff: &git2::Diff) -> Result<String> {
-        let mut diff_content = String::new();
-        diff.print(git2::DiffFormat::Patch, |_delta, _hunk, line| {
-            use std::str;
-            if let Ok(content) = str::from_utf8(line.content()) {
-                let prefix = match line.origin() {
-                    '+' => "+",
-                    '-' => "-",
-                    _ => "",
-                };
-                diff_content.push_str(prefix);
-                diff_content.push_str(content);
-            }
-            true
-        })?;
-        Ok(diff_content)
+        if !output.status.success() {
+            return Err(anyhow!(
+                "Failed to get staged diff: {}", 
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
 
     pub fn get_summary_diff(&self, base: &str) -> Result<String> {
-        let mut diff_opts = DiffOptions::new();
-        
-        let base_commit = if self.repo.revparse(base)?.mode().contains(git2::RevparseMode::SINGLE) {
-            // Base is a commit or tag
-            self.repo.revparse_single(base)?.peel_to_commit()?
-        } else {
-            // Try to find branch
-            let base_branch = self.repo.find_branch(base, BranchType::Local)
-                .or_else(|_| self.repo.find_branch(base, BranchType::Remote))?;
-            base_branch.get().peel_to_commit()?
-        };
+        let output = Command::new("git")
+            .current_dir(&self.repo_path)
+            .arg("diff")
+            .arg(base)
+            .arg("HEAD")
+            .output()?;
 
-        let head_commit = self.repo.head()?.peel_to_commit()?;
-        let base_tree = base_commit.tree()?;
-        let head_tree = head_commit.tree()?;
+        if !output.status.success() {
+            return Err(anyhow!(
+                "Failed to get diff summary: {}", 
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
 
-        let diff = self.repo.diff_tree_to_tree(
-            Some(&base_tree),
-            Some(&head_tree),
-            Some(&mut diff_opts)
-        )?;
-
-        self.format_diff(&diff)
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
 }
