@@ -158,10 +158,15 @@ impl AiService {
             });
         }
 
+        let body_prompt = if body {
+            "Please include a detailed description in the commit message body."
+        } else {
+            "Please generate the commit message only without the body."
+        };
         if body {
             messages.push(ChatMessage {
                 role: "user".to_string(),
-                content: "Please include a detailed description in the commit message body.".to_string(),
+                content: body_prompt.to_string(),
             });
         }
 
