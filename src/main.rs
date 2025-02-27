@@ -25,6 +25,10 @@ struct Cli {
     #[arg(short = 'c', long)]
     commit: bool,
 
+    /// Whether to print detailed AI conversation logs
+    #[arg(short = 'd', long = "debug")]
+    debug: bool,
+
     /// Generate a summary of changes between current HEAD and specified base commit/branch
     #[arg(short = 's', long)]
     summary: Option<String>,
@@ -62,7 +66,7 @@ async fn main() -> Result<()> {
         config.prompt
     );
     let mut commit_message = String::new();
-    let mut stream = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;
+    let mut stream = ai_service.generate_commit_message(diff_content, cli.message, cli.body, cli.debug).await?;
     println!("Commit message:\n");
     while let Some(content) = stream.next().await {
         let content = content?;

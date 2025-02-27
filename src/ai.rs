@@ -138,6 +138,7 @@ impl AiService {
         diff: String,
         message: Option<String>,
         body: bool,
+        debug: bool,
     ) -> Result<impl futures_util::Stream<Item = Result<String>>> {
         let mut messages = vec![
             ChatMessage {
@@ -146,7 +147,7 @@ impl AiService {
             },
             ChatMessage {
                 role: "user".to_string(),
-                content: format!("Git diff ouput:\n{}\n", diff),
+                content: format!("Git diff content: \n{}\n", diff),
             },
         ];
 
@@ -162,6 +163,14 @@ impl AiService {
                 role: "user".to_string(),
                 content: "Please include a detailed description in the commit message body.".to_string(),
             });
+        }
+
+        if debug {
+            println!("\nAI Conversation Details:");
+            for msg in &messages {
+                println!("\n[{}]\n{}", msg.role, msg.content);
+            }
+            println!();
         }
 
         let request = serde_json::json!({
