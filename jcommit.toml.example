@@ -19,6 +19,11 @@
 # Optional configuration, defaults to false
 # is_azure = false
 
+# Custom system prompt for the AI assistant
+# Optional configuration, if not provided, a default prompt will be used
+# prompt = """You are a professional software development assistant..."""
+
+
 # Azure OpenAI API version
 # Optional configuration for Azure OpenAI, defaults to "2023-05-15"
 # api_version = "2023-05-15"

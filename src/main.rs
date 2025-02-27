@@ -58,7 +58,8 @@ async fn main() -> Result<()> {
         config.model,
         config.api_key,
         config.is_azure.unwrap_or(false),
-        config.api_version
+        config.api_version,
+        config.prompt
     );
     let mut commit_message = String::new();
     let mut stream = ai_service.generate_commit_message(diff_content, cli.message, cli.body).await?;

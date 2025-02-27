@@ -41,7 +41,8 @@ struct Choice {
 pub struct AiService {
     client: reqwest::Client,
     api_endpoint: String,
-    model: String
+    model: String,
+    prompt: String
 }
 
 const SYSTEM_PROMPT: &str = "
@@ -70,15 +71,17 @@ const SYSTEM_PROMPT: &str = "
         2. Identify the type of code issue being resolved.
         3. Infer the business-level impact.
 
-    Respond in the following format (do not include any additional content):
-    [Generated commit message]
-    [Blank line if body is requested]
-    [Generated commit body, if requested]
+    4. **Commit Message Format**
+    ▫️ Respond in the following format (without brackets):
+    <Generated commit message>
+    
+    <Generated commit body, if requested>
+    
 
-    Output Example 1(Without body requested):
+    ▫️ Output Example 1(Without body requested):
     fix: add exception handling for non-existent users
 
-    Output Example 2(With Body Requested):
+    ▫️ Output Example 2(With Body Requested):
     fix: add exception handling for non-existent users
 
     - Previously, the system would crash when a non-existent username was provided during login.
@@ -102,7 +105,7 @@ impl AiService {
         }
     }
 
-    pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>, is_azure: bool, api_version: Option<String>) -> Self {
+    pub fn new(api_endpoint: Option<String>, model: Option<String>, api_key: Option<String>, is_azure: bool, api_version: Option<String>, prompt: Option<String>) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         
@@ -125,7 +128,8 @@ impl AiService {
         Self {
             client,
             api_endpoint,
-            model
+            model,
+            prompt: prompt.unwrap_or_else(|| SYSTEM_PROMPT.to_string())
         }
     }
 
@@ -138,11 +142,11 @@ impl AiService {
         let mut messages = vec![
             ChatMessage {
                 role: "system".to_string(),
-                content: SYSTEM_PROMPT.to_string(),
+                content: self.prompt.clone(),
             },
             ChatMessage {
                 role: "user".to_string(),
-                content: format!("Git diff content: \n{}\n", diff),
+                content: format!("Git diff ouput:\n{}\n", diff),
             },
         ];
 

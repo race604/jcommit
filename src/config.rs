@@ -9,6 +9,7 @@ pub struct Config {
     pub api_key: Option<String>,
     pub is_azure: Option<bool>,
     pub api_version: Option<String>,
+    pub prompt: Option<String>,
 }
 
 impl Config {
@@ -26,6 +27,7 @@ impl Config {
                 .and_then(|v| v.parse::<bool>().ok())
                 .or(config.is_azure),
             api_version: std::env::var("JCOMMIT_API_VERSION").ok().or(config.api_version),
+            prompt: std::env::var("JCOMMIT_PROMPT").ok().or(config.prompt),
         };
 
         Ok(config)
@@ -56,6 +58,7 @@ impl Default for Config {
             api_key: None,
             is_azure: None,
             api_version: None,
+            prompt: None,
         }
     }
 }
