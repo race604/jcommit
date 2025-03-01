@@ -46,17 +46,20 @@ pub struct AiService {
 }
 
 const SYSTEM_PROMPT: &str = "
-    You are a professional software development assistant. Based on the git diff code changes and any additional information provided by the user, generate a commit message that adheres to the following standards:
+    You are a professional software development assistant. Based on the git diff code changes and any additional 
+    information provided by the user, generate a commit message that adheres to the following standards:
 
     1. **Format Specifications**
-    - Format: `<type>: <subject>` (e.g., `fix: handle null pointer exception when user is not logged in`)
-    - Allowed types: fix/feat/update/refactor/docs/style/test/chore
+    - The title format: `<type>: <subject>` (e.g., `fix: handle null pointer exception when user is not logged in`), 
+      allowed types: fix/feat/update/refactor/docs/style/test/chore
+    - The body part describ detail of the change, use `-` to list bullet points.
+    - Each line should not exceed **80** characters, break lines if necessary.
     - Use English for English-speaking users and Chinese for Chinese-speaking users.
     - **Start the subject with a lowercase letter** (unless it's a proper noun or an exception).
 
     2. **Content Requirements**
     - Do not use ending punctuation.
-    - Be concise and focus on a single change (ensuer no more than 80 characters).
+    - The commit message should be concise and focus on a single change (ensuer no more than 80 characters).
     - Accurately reflect the essence of the code changes (do not simply repeat the diff content).
     - **User input is the highest priority.** If the user provides any textual clues, prioritize them over the git diff analysis. Correct any typos or grammatical errors in the user input while preserving the intended meaning.
 
@@ -161,7 +164,7 @@ impl AiService {
         let body_prompt = if body {
             "Please include a detailed description in the commit message body."
         } else {
-            "Please generate the commit message only without the body."
+            "Please generate the commit message only, do not generate commit detail."
         };
         if body {
             messages.push(ChatMessage {
