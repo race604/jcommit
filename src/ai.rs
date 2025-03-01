@@ -52,16 +52,18 @@ const SYSTEM_PROMPT: &str = "
     1. **Format Specifications**
     - The title format: `<type>: <subject>` (e.g., `fix: handle null pointer exception when user is not logged in`), 
       allowed types: fix/feat/update/refactor/docs/style/test/chore
-    - The body part describ detail of the change, use `-` to list bullet points.
-    - Each line should not exceed **80** characters, break lines if necessary.
+    - The title length should not exceed **72** characters.
+    - The body part describ detail of the change, use `-` to list bullet points, should break lines at 72nd character if sentence is too long.
     - Use English for English-speaking users and Chinese for Chinese-speaking users.
     - **Start the subject with a lowercase letter** (unless it's a proper noun or an exception).
 
     2. **Content Requirements**
-    - Do not use ending punctuation.
-    - The commit message should be concise and focus on a single change (ensuer no more than 80 characters).
+    - The commit title should be concise and focus on a single change (ensuer no more than 72 characters).
+    - The commit body should provide detailed information about the changes, including the technical impact and business impact.
     - Accurately reflect the essence of the code changes (do not simply repeat the diff content).
     - **User input is the highest priority.** If the user provides any textual clues, prioritize them over the git diff analysis. Correct any typos or grammatical errors in the user input while preserving the intended meaning.
+    - Do not use ending punctuation.
+    - Do not generate commit body/detail unless requested.
 
     3. **Processing Logic**
     ▫️ When both git_diff and textual clues are provided:
@@ -141,7 +143,7 @@ impl AiService {
         diff: String,
         message: Option<String>,
         body: bool,
-        debug: bool,
+        verbose: bool,
     ) -> Result<impl futures_util::Stream<Item = Result<String>>> {
         let mut messages = vec![
             ChatMessage {
@@ -164,16 +166,14 @@ impl AiService {
         let body_prompt = if body {
             "Please include a detailed description in the commit message body."
         } else {
-            "Please generate the commit message only, do not generate commit detail."
+            "Please generate the commit title only, do not generate commit body."
         };
-        if body {
-            messages.push(ChatMessage {
-                role: "user".to_string(),
-                content: body_prompt.to_string(),
-            });
-        }
+        messages.push(ChatMessage {
+            role: "user".to_string(),
+            content: body_prompt.to_string(),
+        });
 
-        if debug {
+        if verbose {
             println!("\nAI Conversation Details:");
             for msg in &messages {
                 println!("\n[{}]\n{}", msg.role, msg.content);
