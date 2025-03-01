@@ -80,4 +80,21 @@ impl GitDiff {
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
+
+    pub fn add_all(&self) -> Result<()> {
+        let output = Command::new("git")
+            .current_dir(&self.repo_path)
+            .arg("add")
+            .arg(".")
+            .output()?;
+
+        if !output.status.success() {
+            return Err(anyhow!(
+                "Failed to add changes: {}", 
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
+        Ok(())
+    }
 }

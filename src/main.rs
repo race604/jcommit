@@ -32,6 +32,10 @@ struct Cli {
     /// Generate a summary of changes between current HEAD and specified base commit/branch
     #[arg(short = 's', long)]
     summary: Option<String>,
+
+    /// Automatically stage all changes before generating commit message
+    #[arg(short = 'a', long)]
+    add: bool,
 }
 
 #[tokio::main]
@@ -40,6 +44,11 @@ async fn main() -> Result<()> {
     
     // Read Git repository diff information
     let git_diff = git::GitDiff::new(&cli.path)?;
+    
+    // Automatically stage changes if -a flag is provided
+    if cli.add {
+        git_diff.add_all()?;
+    }
     
     let diff_content = if let Some(base) = cli.summary {
         git_diff.get_summary_diff(&base)?
