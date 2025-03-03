@@ -45,15 +45,10 @@ async fn main() -> Result<()> {
     // Read Git repository diff information
     let git_diff = git::GitDiff::new(&cli.path)?;
     
-    // Automatically stage changes if -a flag is provided
-    if cli.add {
-        git_diff.add_all()?;
-    }
-    
     let diff_content = if let Some(base) = cli.summary {
         git_diff.get_summary_diff(&base)?
     } else {
-        let diff = git_diff.get_staged_diff()?;
+        let diff = git_diff.get_staged_diff(cli.add)?;
         if diff.trim().is_empty() {
             println!("Error: No staged changes found. Please use 'git add' command to stage your changes.");
             return Ok(());
@@ -88,6 +83,11 @@ async fn main() -> Result<()> {
     println!("\n");
 
     if cli.commit {
+        // Automatically stage changes if -a flag is provided
+        if cli.add {
+            git_diff.add_all()?;
+        }
+
         git_diff.commit(&commit_message)?;
         println!("Successfully committed changes.");
     } else {
@@ -98,6 +98,9 @@ async fn main() -> Result<()> {
         std::io::stdin().read_line(&mut input)?;
         
         if input.trim().to_lowercase() == "y" {
+            if cli.add {
+                git_diff.add_all()?;
+            }
             git_diff.commit(&commit_message)?;
             println!("Successfully committed changes.");
         }

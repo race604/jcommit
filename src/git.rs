@@ -46,12 +46,17 @@ impl GitDiff {
         })
     }
 
-    pub fn get_staged_diff(&self) -> Result<String> {
-        let output = Command::new("git")
-            .current_dir(&self.repo_path)
-            .arg("diff")
-            .arg("--cached")
-            .output()?;
+    pub fn get_staged_diff(&self, all: bool) -> Result<String> {
+        let mut command = Command::new("git");
+        command.current_dir(&self.repo_path).arg("diff");
+        
+        if all {
+            command.arg("HEAD");
+        } else {
+            command.arg("--cached");
+        }
+
+        let output = command.output()?;
 
         if !output.status.success() {
             return Err(anyhow!(
